@@ -42,50 +42,6 @@ const CalendarView: React.FC = () => {
     return 'normal';
   };
 
-  const getDateClasses = (date: Date) => {
-    const status = getDateStatus(date);
-    const isCurrentMonth = isSameMonth(date, currentDate);
-    const isToday = isSameDay(date, new Date());
-    
-    let classes = 'w-8 h-8 flex items-center justify-center text-xs rounded-full transition-colors ';
-    
-    if (!isCurrentMonth) {
-      classes += 'text-gray-300 ';
-    } else {
-      switch (status) {
-        case 'both-free':
-          classes += 'bg-gradient-to-br from-pink-200 to-teal-200 text-gray-800 font-bold border-2 border-pink-300 ';
-          break;
-        case 'both-available':
-          classes += 'bg-gradient-to-br from-pink-100 to-teal-100 text-gray-700 font-medium ';
-          break;
-        case 'person1-free':
-          classes += 'bg-pink-100 text-pink-800 ';
-          break;
-        case 'person2-free':
-          classes += 'bg-teal-100 text-teal-800 ';
-          break;
-        case 'both-busy':
-          classes += 'bg-gray-200 text-gray-600 ';
-          break;
-        case 'person1-busy':
-          classes += 'bg-pink-50 text-pink-600 ';
-          break;
-        case 'person2-busy':
-          classes += 'bg-teal-50 text-teal-600 ';
-          break;
-        default:
-          classes += 'text-gray-700 hover:bg-gray-100 ';
-      }
-    }
-    
-    if (isToday) {
-      classes += 'ring-2 ring-blue-500 ';
-    }
-    
-    return classes;
-  };
-
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentDate(prev => direction === 'prev' ? subMonths(prev, 1) : addMonths(prev, 1));
   };
@@ -132,42 +88,54 @@ const CalendarView: React.FC = () => {
         ))}
       </div>
 
-      {/* カレンダーグリッド */}
-      <div className="grid grid-cols-7 gap-1 mb-4">
+      {/* カレンダーグリッド - Googleカレンダー風 */}
+      <div className="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200 mb-4">
         {daysInMonth.map((date) => {
           const dayEvents = getEventsForDate(date);
           const status = getDateStatus(date);
+          const isCurrentMonth = isSameMonth(date, currentDate);
+          const isToday = isSameDay(date, new Date());
           
           return (
-            <div key={date.toISOString()} className="relative">
-              <div className={getDateClasses(date)}>
+            <div key={date.toISOString()} className={`bg-white min-h-[80px] p-1 relative ${
+              !isCurrentMonth ? 'bg-gray-50' : ''
+            } ${
+              isToday ? 'bg-blue-50' : ''
+            }`}>
+              {/* 日付 */}
+              <div className={`text-xs font-medium mb-1 ${
+                !isCurrentMonth ? 'text-gray-400' :
+                isToday ? 'text-blue-600 font-bold' :
+                'text-gray-700'
+              }`}>
                 {format(date, 'd')}
                 {status === 'both-free' && (
-                  <Heart className="w-2 h-2 absolute -top-1 -right-1 text-pink-500 fill-current" />
+                  <Heart className="w-2 h-2 inline ml-1 text-pink-500 fill-current" />
                 )}
               </div>
               
-              {/* イベントドット */}
-              {dayEvents.length > 0 && (
-                <div className="flex justify-center mt-1">
-                  <div className="flex space-x-0.5">
-                    {dayEvents.slice(0, 3).map((event, index) => (
-                      <div
-                        key={index}
-                        className={`w-1 h-1 rounded-full ${
-                          event.type === 'work' ? 'bg-red-400' :
-                          event.type === 'personal' ? 'bg-blue-400' :
-                          event.type === 'free' ? 'bg-green-400' :
-                          'bg-gray-400'
-                        }`}
-                      />
-                    ))}
-                    {dayEvents.length > 3 && (
-                      <div className="w-1 h-1 rounded-full bg-gray-300" />
-                    )}
+              {/* イベント - Googleカレンダー風 */}
+              <div className="space-y-0.5">
+                {dayEvents.slice(0, 3).map((event, index) => (
+                  <div
+                    key={index}
+                    className={`text-xs px-1 py-0.5 rounded text-white truncate ${
+                      event.type === 'work' ? 'bg-red-500' :
+                      event.type === 'personal' ? 'bg-blue-500' :
+                      event.type === 'free' ? 'bg-green-500' :
+                      'bg-gray-500'
+                    }`}
+                    title={`${event.title} (${event.person === 'person1' ? couple.person1.name : event.person === 'person2' ? couple.person2.name : '両方'})`}
+                  >
+                    {event.title}
                   </div>
-                </div>
-              )}
+                ))}
+                {dayEvents.length > 3 && (
+                  <div className="text-xs text-gray-500 px-1">
+                    +{dayEvents.length - 3} more
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}
